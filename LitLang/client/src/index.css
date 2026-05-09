@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(950px 430px at -10% -10%, rgba(122, 49, 62, 0.09), transparent 60%),
+    radial-gradient(900px 520px at 110% -20%, rgba(154, 127, 102, 0.11), transparent 60%),
+    linear-gradient(180deg, #f8f5f0 0%, #f4efe8 55%, #ede8e0 100%);
+  color: #1f2937;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@layer components {
+  .surface-card {
+    @apply bg-white/95 border border-slate-200 rounded-xl shadow-sm;
+  }
+
+  .ui-page-title {
+    @apply text-3xl md:text-4xl font-bold tracking-tight text-slate-900;
+  }
+
+  .ui-card {
+    @apply bg-white/95 border border-slate-200 rounded-xl shadow-sm;
+  }
+
+  .ui-card-hover {
+    @apply transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 hover:border-primary-300;
+  }
+
+  .ui-input {
+    @apply w-full px-3 py-2.5 border border-slate-300 rounded-lg bg-white text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-400;
+  }
+
+  .ui-btn-primary {
+    @apply px-4 py-2 bg-accent-700 text-white rounded-lg hover:bg-accent-800 shadow-sm disabled:opacity-50 transition-all duration-300;
+  }
+
+  .ui-btn-soft {
+    @apply px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-50 transition-colors;
+  }
+
+  .ui-excerpt-box {
+    @apply bg-primary-100 border border-primary-300 rounded-lg p-3;
+  }
+
+  .ui-rule-chip {
+    @apply inline-flex items-center rounded-md bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 font-medium;
+  }
+
+  .ui-hero {
+    @apply relative overflow-hidden rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 via-white to-primary-100 shadow-sm;
+  }
+
+  .ui-gold-accent {
+    @apply text-accent-700;
+  }
+
+  .ui-fade-in {
+    animation: ui-fade-in 0.45s ease-out both;
+  }
+
+  .ui-glow-hover {
+    @apply transition-all duration-300;
+  }
+
+  .ui-glow-hover:hover {
+    box-shadow: 0 0 0 1px rgba(151, 63, 77, 0.18), 0 10px 24px rgba(63, 47, 37, 0.12);
+  }
+}
+
+@keyframes ui-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

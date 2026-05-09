@@ -1,0 +1,157 @@
+{
+  "app": {
+    "title": "LitLang",
+    "subtitle": "Learn languages through literature"
+  },
+  "nav": {
+    "home": "Home",
+    "languages": "Languages",
+    "catalog": "Catalog",
+    "search": "Search",
+    "login": "Log In",
+    "register": "Sign Up",
+    "logout": "Log Out",
+    "dashboard": "Dashboard",
+    "myBooks": "My Books",
+    "favourites": "Favourites",
+    "admin": "Admin Panel"
+  },
+  "home": {
+    "hero": "Learn grammar through the world's greatest books",
+    "description": "Discover grammar rules illustrated by real excerpts from classic and contemporary fiction.",
+    "languagesAvailable": "Languages available",
+    "browseLanguages": "Browse Languages",
+    "getStarted": "Get Started"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Display Name",
+    "login": "Log In",
+    "register": "Sign Up",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginError": "Invalid email or password",
+    "registerError": "Registration failed"
+  },
+  "languages": {
+    "title": "Choose a Language",
+    "categories": "Categories"
+  },
+  "categories": {
+    "title": "Grammar Categories",
+    "subtitle": "Choose a section and jump to specific rules.",
+    "rules": "rules"
+  },
+  "rules": {
+    "title": "Grammar Rules",
+    "summary": "Summary",
+    "subtitle": "Choose a rule and learn it through literary excerpts.",
+    "explanation": "Rule explanation",
+    "excerpts": "Excerpts",
+    "noExcerpts": "No excerpts available yet."
+  },
+  "excerpts": {
+    "passage": "Passage",
+    "book": "Book",
+    "author": "Author",
+    "rule": "Rule",
+    "from": "from",
+    "page": "Page",
+    "chapter": "Chapter"
+  },
+  "progress": {
+    "notStarted": "Not Started",
+    "inProgress": "In Progress",
+    "completed": "Completed",
+    "title": "My Progress",
+    "stats": "Learning Statistics",
+    "byCategory": "Progress by category",
+    "byCategoryHint": "Share of rules marked completed within each grammar category.",
+    "overall": "Overall completion",
+    "overallHint": "Completed rules out of all rules tracked in your progress.",
+    "recentActivity": "Recent activity",
+    "recentActivityHint": "Last rules you updated."
+  },
+  "favourites": {
+    "title": "My Favourites",
+    "addToFavourites": "Add to Favourites",
+    "removeFromFavourites": "Remove from Favourites",
+    "empty": "No favourites yet.",
+    "booksSection": "Books from catalog",
+    "booksSectionHint": "Admin imports books from Gutenberg first, then you can add them to favourites here.",
+    "itemsSection": "Favourite rules and excerpts",
+    "selectBook": "— Select book —",
+    "noExcerptsForSelectedBook": "No excerpts for the selected book yet.",
+    "rule": "Rule"
+  },
+  "search": {
+    "placeholder": "Search excerpts...",
+    "title": "Search Results",
+    "noResults": "No results found.",
+    "resultsFor": "Results for"
+  },
+  "catalog": {
+    "title": "Book Catalog",
+    "subtitle": "Search books, add them to catalog, and save useful excerpts to favourites.",
+    "gutenbergSearch": "Search and import from Gutenberg",
+    "searchPlaceholder": "Type title or author...",
+    "search": "Search",
+    "importBook": "Import to catalog",
+    "imported": "Imported",
+    "importedBooks": "Books in catalog"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "dashboard": "Dashboard",
+    "content": "Content",
+    "users": "Users",
+    "aiTools": "AI Tools",
+    "gutenberg": "Gutenberg",
+    "analytics": "Analytics",
+    "languages": "Languages",
+    "categories": "Categories",
+    "rules": "Rules",
+    "books": "Books",
+    "booksIsbnHint": "ISBN lookup only fills the form from Open Library. Save the book here, then link excerpts to this book in Excerpts — that is how search and favourites use the title, author, and cover.",
+    "excerpts": "Excerpts",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Are you sure?",
+    "backToSite": "Back to site",
+    "suggestExcerpts": "Suggest Excerpts",
+    "suggestSummary": "Suggest Summary",
+    "import": "Import",
+    "extract": "Extract Passages",
+    "popularLanguages": "Popular languages",
+    "popularLanguagesHint": "Ranked by learning activity (progress records). If there is no activity yet, the list shows languages by number of grammar rules.",
+    "progressRows": "progress rows",
+    "rulesLabel": "rules",
+    "completionByCategory": "Completion by category",
+    "completionByCategoryHint": "Among all learners: completed rule progress entries vs total progress entries per category.",
+    "noProgressYet": "No learning progress in the database yet — stats will appear after users study rules.",
+    "progressAcrossUsers": "Progress status (all users)",
+    "progressAcrossUsersHint": "Distribution of all user_progress rows by status.",
+    "recentRegistrations": "New users (30 days)",
+    "recentRegistrationsHint": "Users registered in the last 30 days.",
+    "copySummary": "Copy summary",
+    "summaryCopied": "Copied to clipboard.",
+    "applySummaryToRule": "Save summary to rule (EN)",
+    "summaryApplied": "English rule summary updated.",
+    "summaryCopyFailed": "Could not copy to clipboard.",
+    "openRuleEditor": "Open rule editor"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "of": "of",
+    "noData": "No data available"
+  }
+}
