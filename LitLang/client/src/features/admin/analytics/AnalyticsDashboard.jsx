@@ -7,6 +7,11 @@ export default function AnalyticsDashboard() {
   const { t } = useTranslation();
   const { get, loading } = useApi();
   const [data, setData] = useState(null);
+  const statusLabelKeyByValue = {
+    not_started: 'progress.notStarted',
+    in_progress: 'progress.inProgress',
+    completed: 'progress.completed',
+  };
 
   useEffect(() => {
     get('/admin/analytics').then((res) => setData(res.data ?? res)).catch(() => {});
@@ -88,7 +93,9 @@ export default function AnalyticsDashboard() {
           <div className="space-y-2">
             {data.userProgressByStatus.map((row) => (
               <div key={row.status} className="flex items-center gap-3">
-                <span className="text-xs w-28 shrink-0 text-gray-600 capitalize">{row.status.replace('_', ' ')}</span>
+                <span className="text-xs w-28 shrink-0 text-gray-600">
+                  {t(statusLabelKeyByValue[row.status] || 'common.noData')}
+                </span>
                 <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-accent-600 rounded-full"

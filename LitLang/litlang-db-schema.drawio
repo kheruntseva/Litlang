@@ -1,0 +1,101 @@
+<mxfile host="app.diagrams.net" modified="2026-05-11T09:00:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="litlang-er" name="LitLang DB">
+    <mxGraphModel dx="1800" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1080" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="t_languages" value="languages&#10;PK id&#10;code&#10;name&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="220" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_categories" value="categories&#10;PK id&#10;FK language_id&#10;slug&#10;sort_order&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="240" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_category_translations" value="category_translations&#10;PK id&#10;FK category_id&#10;locale&#10;title" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="620" y="40" width="250" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_rules" value="rules&#10;PK id&#10;FK category_id&#10;slug&#10;sort_order&#10;created_at&#10;updated_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="240" height="170" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_rule_translations" value="rule_translations&#10;PK id&#10;FK rule_id&#10;locale&#10;title&#10;summary" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="620" y="240" width="250" height="150" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_books" value="books&#10;PK id&#10;title&#10;author&#10;isbn&#10;FK language_id (nullable)&#10;cover_url&#10;gutenberg_id&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="260" width="250" height="200" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_excerpts" value="excerpts&#10;PK id&#10;FK rule_id&#10;FK book_id&#10;passage&#10;highlight&#10;page_number&#10;chapter&#10;context_note&#10;sort_order&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="620" y="450" width="260" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_users" value="users&#10;PK id (uuid)&#10;email&#10;password_hash&#10;display_name&#10;role&#10;preferred_locale&#10;is_active&#10;created_at&#10;updated_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="980" y="40" width="260" height="220" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_user_progress" value="user_progress&#10;PK id&#10;FK user_id&#10;FK rule_id&#10;status&#10;updated_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="980" y="300" width="260" height="140" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_favourites" value="favourites&#10;PK id&#10;FK user_id&#10;target_type&#10;target_id&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="980" y="480" width="260" height="140" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_gutenberg_texts" value="gutenberg_texts&#10;PK id&#10;FK book_id&#10;full_text&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="510" width="250" height="130" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="t_gutenberg_user_snippets" value="gutenberg_user_snippets&#10;PK id&#10;FK user_id&#10;FK book_id&#10;FK rule_id (nullable)&#10;passage&#10;paragraph_number&#10;highlight&#10;page_number&#10;chapter&#10;context_note&#10;created_at" style="rounded=0;whiteSpace=wrap;html=1;strokeWidth=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacing=6;" vertex="1" parent="1">
+          <mxGeometry x="980" y="670" width="280" height="240" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e_languages_categories" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_languages" target="t_categories">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_languages_books" value="1:N (nullable)" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_languages" target="t_books">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_categories_category_translations" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_categories" target="t_category_translations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_categories_rules" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_categories" target="t_rules">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_rules_rule_translations" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_rules" target="t_rule_translations">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_rules_excerpts" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_rules" target="t_excerpts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_books_excerpts" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_books" target="t_excerpts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_users_progress" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_users" target="t_user_progress">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_rules_progress" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_rules" target="t_user_progress">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_users_favourites" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_users" target="t_favourites">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_books_gutenberg_texts" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_books" target="t_gutenberg_texts">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_users_gutenberg_snippets" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_users" target="t_gutenberg_user_snippets">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_books_gutenberg_snippets" value="1:N" style="endArrow=block;html=1;strokeColor=#4a4a4a;" edge="1" parent="1" source="t_books" target="t_gutenberg_user_snippets">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e_rules_gutenberg_snippets" value="1:N (nullable)" style="endArrow=block;html=1;strokeColor=#4a4a4a;dashed=1;" edge="1" parent="1" source="t_rules" target="t_gutenberg_user_snippets">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

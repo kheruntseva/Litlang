@@ -40,6 +40,7 @@ async function getUserFavourites(userId, filters = {}) {
       'b.author as book_author',
       'e.passage as excerpt_passage',
       'rt.title as rule_title',
+      'gus.book_id as gutenberg_snippet_book_id',
       'gus.passage as gutenberg_snippet_passage',
       'gus.highlight as gutenberg_snippet_highlight',
       'gus.page_number as gutenberg_snippet_page_number',

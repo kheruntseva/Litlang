@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../hooks/useApi';
+import { acceptLanguageForCourse } from '../../../lib/courseLocaleHeaders';
 import Spinner from '../../../components/Spinner';
 
 async function browserGutendexSearch(query) {
@@ -129,10 +130,16 @@ export default function GutenbergSearchPanel() {
       const langs = langRes.data || langRes;
       const allRules = [];
       for (const lang of langs) {
-        const catRes = await get(`/languages/${lang.id}/categories`);
+        const catRes = await get(
+          `/languages/${lang.id}/categories`,
+          acceptLanguageForCourse(langs, lang.id)
+        );
         const cats = catRes.data || catRes;
         for (const cat of cats) {
-          const ruleRes = await get(`/categories/${cat.id}/rules`);
+          const ruleRes = await get(
+            `/categories/${cat.id}/rules`,
+            acceptLanguageForCourse(langs, lang.id)
+          );
           const r = ruleRes.data || ruleRes;
           allRules.push(...r.map((rule) => ({ ...rule, categoryTitle: cat.title })));
         }

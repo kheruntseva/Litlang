@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../hooks/useApi';
 import api from '../../../lib/axiosInstance';
+import { acceptLanguageForCourse, parseApiId } from '../../../lib/courseLocaleHeaders';
 import Spinner from '../../../components/Spinner';
 
 function HighlightedPassage({ passage, highlight }) {
@@ -32,39 +33,102 @@ export default function AISuggestPanel() {
   const [summary, setSummary] = useState('');
   const [generating, setGenerating] = useState(false);
   const [summaryActionMsg, setSummaryActionMsg] = useState('');
+  const rulesFetchCatRef = useRef(null);
+  const categoriesFetchLangRef = useRef(null);
 
   const fetchLanguages = useCallback(async () => {
     try {
       const res = await get('/languages');
       const langs = res.data || res;
-      setLanguages(langs);
-      if (langs.length > 0 && !selectedLang) setSelectedLang(String(langs[0].id));
+      setLanguages(Array.isArray(langs) ? langs : []);
+      const list = Array.isArray(langs) ? langs : [];
+      if (list.length > 0 && list[0]?.id != null && !parseApiId(selectedLang)) {
+        setSelectedLang(String(list[0].id));
+      }
     } catch {}
   }, [get, selectedLang]);
 
   const fetchCategories = useCallback(async () => {
-    if (!selectedLang) return;
+    const langId = parseApiId(selectedLang);
+    if (!langId) {
+      categoriesFetchLangRef.current = null;
+      setCategories([]);
+      setSelectedCat('');
+      return;
+    }
+    categoriesFetchLangRef.current = langId;
     try {
-      const res = await get(`/languages/${selectedLang}/categories`);
+      const res = await get(
+        `/languages/${langId}/categories`,
+        acceptLanguageForCourse(languages, langId)
+      );
       const cats = res.data || res;
-      setCategories(cats);
-      if (cats.length > 0 && !selectedCat) setSelectedCat(String(cats[0].id));
+      const catList = Array.isArray(cats) ? cats : [];
+      if (categoriesFetchLangRef.current !== langId) return;
+      setCategories(catList);
+      if (catList.length > 0 && catList[0]?.id != null && !parseApiId(selectedCat)) {
+        setSelectedCat(String(catList[0].id));
+      }
     } catch {}
-  }, [get, selectedLang, selectedCat]);
+  }, [get, selectedLang, selectedCat, languages]);
 
   const fetchRules = useCallback(async () => {
-    if (!selectedCat) return;
+    const catId = parseApiId(selectedCat);
+    if (!catId) {
+      rulesFetchCatRef.current = null;
+      setRules([]);
+      setSelectedRule('');
+      return;
+    }
+    rulesFetchCatRef.current = catId;
+    setRules([]);
     try {
-      const res = await get(`/categories/${selectedCat}/rules`);
+      const res = await get(
+        `/categories/${catId}/rules`,
+        acceptLanguageForCourse(languages, selectedLang)
+      );
       const r = res.data || res;
-      setRules(r);
-      if (r.length > 0 && !selectedRule) setSelectedRule(String(r[0].id));
+      const ruleList = Array.isArray(r) ? r : [];
+      if (rulesFetchCatRef.current !== catId) return;
+      setRules(ruleList);
     } catch {}
-  }, [get, selectedCat, selectedRule]);
+  }, [get, selectedCat, selectedLang, languages]);
 
   useEffect(() => { fetchLanguages(); }, [fetchLanguages]);
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
   useEffect(() => { fetchRules(); }, [fetchRules]);
+
+  useEffect(() => {
+    if (!languages.length) return;
+    const keys = new Set(languages.map((l) => String(l.id)));
+    const cur = parseApiId(selectedLang);
+    if (!cur || !keys.has(cur)) setSelectedLang(String(languages[0].id));
+  }, [languages, selectedLang]);
+
+  useEffect(() => {
+    if (!categories.length) {
+      setSelectedCat('');
+      return;
+    }
+    const keys = new Set(categories.map((c) => String(c.id)));
+    const cur = parseApiId(selectedCat);
+    if (!cur || !keys.has(cur)) setSelectedCat(String(categories[0].id));
+  }, [categories, selectedCat]);
+
+  useEffect(() => {
+    if (!rules.length) {
+      setSelectedRule('');
+      return;
+    }
+    const keys = new Set(rules.map((r) => String(r.id)));
+    const cur = parseApiId(selectedRule);
+    if (!cur || !keys.has(cur)) setSelectedRule(String(rules[0].id));
+  }, [rules, selectedRule]);
+
+  const courseLocale = useMemo(() => {
+    const lang = languages.find((l) => String(l.id) === String(selectedLang));
+    return String(lang?.code || 'en').toLowerCase().slice(0, 10);
+  }, [languages, selectedLang]);
 
   const handleSuggestExcerpts = async () => {
     if (!selectedRule) return;
@@ -110,29 +174,25 @@ export default function AISuggestPanel() {
     setSummaryActionMsg('');
     try {
       const ruleId = Number(selectedRule);
-      const { data: en } = await api.get(`/rules/${ruleId}`, { headers: { 'Accept-Language': 'en' } });
-      const enRule = en?.data;
-      if (!enRule?.title) return;
+      const readRule = (settled) => {
+        if (settled.status !== 'fulfilled') return null;
+        const payload = settled.value?.data;
+        return payload?.data ?? payload ?? null;
+      };
+      const [primarySettled, enSettled] = await Promise.allSettled([
+        api.get(`/rules/${ruleId}`, { headers: { 'Accept-Language': courseLocale } }),
+        api.get(`/rules/${ruleId}`, { headers: { 'Accept-Language': 'en' } }),
+      ]);
+      let ruleData = readRule(primarySettled);
+      if (!ruleData?.title) ruleData = readRule(enSettled);
+      if (!ruleData?.title) return;
 
-      const translations = [{ locale: 'en', title: enRule.title, summary: summary.trim() }];
-      try {
-        const { data: ruPayload } = await api.get(`/rules/${ruleId}`, { headers: { 'Accept-Language': 'ru' } });
-        const ruRule = ruPayload?.data;
-        if (ruRule?.title?.trim()) {
-          translations.push({
-            locale: 'ru',
-            title: ruRule.title,
-            summary: ruRule.summary?.trim() || summary.trim(),
-          });
-        }
-      } catch {
-        // optional locale
-      }
+      const translations = [{ locale: courseLocale, title: ruleData.title, summary: summary.trim() }];
 
       await put(`/admin/rules/${ruleId}`, {
-        category_id: enRule.category_id,
-        slug: enRule.slug,
-        sort_order: Number(enRule.sort_order) || 0,
+        category_id: ruleData.category_id,
+        slug: ruleData.slug,
+        sort_order: Number(ruleData.sort_order) || 0,
         translations,
       });
       setSummaryActionMsg(t('admin.summaryApplied'));

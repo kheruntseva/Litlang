@@ -2,7 +2,18 @@ const { Router } = require('express');
 const { body, param, query } = require('express-validator');
 const validate = require('../../middleware/validate');
 const db = require('../../db/connection');
-const { NotFoundError } = require('../../utils/errors');
+const { NotFoundError, ConflictError } = require('../../utils/errors');
+
+function describeBookConflict(err) {
+  const detail = String(err?.detail || err?.message || '');
+  if (detail.includes('books_isbn_unique') || /\(isbn\)/i.test(detail)) {
+    return 'Книга с таким ISBN уже существует в каталоге.';
+  }
+  if (detail.includes('books_gutenberg_id_unique') || /\(gutenberg_id\)/i.test(detail)) {
+    return 'Книга с таким Gutenberg ID уже существует в каталоге.';
+  }
+  return 'Запись с такими уникальными полями уже существует.';
+}
 
 const router = Router();
 
@@ -312,6 +323,9 @@ router.post(
         .returning('*');
       res.status(201).json({ data: book });
     } catch (err) {
+      if (err && err.code === '23505') {
+        return next(new ConflictError(describeBookConflict(err)));
+      }
       next(err);
     }
   }
@@ -338,6 +352,9 @@ router.put(
       if (!book) throw new NotFoundError('Book');
       res.json({ data: book });
     } catch (err) {
+      if (err && err.code === '23505') {
+        return next(new ConflictError(describeBookConflict(err)));
+      }
       next(err);
     }
   }

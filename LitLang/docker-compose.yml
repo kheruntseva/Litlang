@@ -19,6 +19,8 @@ services:
     env_file: ./server/.env
     expose:
       - "3000"
+    volumes:
+      - ./server/src:/app/src
     depends_on:
       db:
         condition: service_healthy

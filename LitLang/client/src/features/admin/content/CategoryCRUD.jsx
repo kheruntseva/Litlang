@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../hooks/useApi';
-import api from '../../../lib/axiosInstance';
+import { acceptLanguageForCourse, parseApiId } from '../../../lib/courseLocaleHeaders';
 import Spinner from '../../../components/Spinner';
 
 export default function CategoryCRUD() {
@@ -11,6 +11,7 @@ export default function CategoryCRUD() {
   const [categories, setCategories] = useState([]);
   const [selectedLang, setSelectedLang] = useState('');
   const [editing, setEditing] = useState(null);
+  const [formError, setFormError] = useState('');
   const [form, setForm] = useState({
     language_id: '', slug: '', sort_order: 0,
     title_en: '', title_ru: '',
@@ -20,32 +21,74 @@ export default function CategoryCRUD() {
     try {
       const res = await get('/languages');
       const langs = res.data || res;
-      setLanguages(langs);
-      if (langs.length > 0 && !selectedLang) setSelectedLang(String(langs[0].id));
+      setLanguages(Array.isArray(langs) ? langs : []);
+      const list = Array.isArray(langs) ? langs : [];
+      if (list.length > 0 && list[0]?.id != null && !parseApiId(selectedLang)) {
+        setSelectedLang(String(list[0].id));
+      }
     } catch {}
   }, [get, selectedLang]);
 
   const fetchCategories = useCallback(async () => {
-    if (!selectedLang) return;
+    const langId = parseApiId(selectedLang);
+    if (!langId) {
+      setCategories([]);
+      return;
+    }
     try {
-      const res = await get(`/languages/${selectedLang}/categories`);
-      setCategories(res.data || res);
+      const res = await get(
+        `/languages/${langId}/categories?all=1`,
+        acceptLanguageForCourse(languages, langId)
+      );
+      const raw = res?.data;
+      const list = Array.isArray(raw) ? raw : Array.isArray(res) ? res : [];
+      setCategories(list);
     } catch {}
-  }, [get, selectedLang]);
+  }, [get, selectedLang, languages]);
 
   useEffect(() => { fetchLanguages(); }, [fetchLanguages]);
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
 
+  useEffect(() => {
+    if (!languages.length) return;
+    const keys = new Set(languages.map((l) => String(l.id)));
+    const cur = parseApiId(selectedLang);
+    if (!cur || !keys.has(cur)) setSelectedLang(String(languages[0].id));
+  }, [languages, selectedLang]);
+
+  const localeBundle = useMemo(() => {
+    const lang = languages.find((l) => String(l.id) === String(selectedLang));
+    const primaryLocale = String(lang?.code || 'en')
+      .trim()
+      .toLowerCase()
+      .slice(0, 10);
+    const secondaryLocale = primaryLocale === 'ru' ? 'en' : 'ru';
+    const secMeta = languages.find((l) => String(l.code || '').toLowerCase() === secondaryLocale);
+    const courseLabel = lang ? `${lang.name} (${lang.code})` : primaryLocale;
+    const secondaryLabel = secMeta ? `${secMeta.name} (${secMeta.code})` : secondaryLocale;
+    return { primaryLocale, secondaryLocale, courseLabel, secondaryLabel };
+  }, [languages, selectedLang]);
+
   const resetForm = () => {
     setForm({ language_id: selectedLang, slug: '', sort_order: 0, title_en: '', title_ru: '' });
     setEditing(null);
+    setFormError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Always send EN; only include RU if non-empty
-    const translations = [{ locale: 'en', title: form.title_en }];
-    if (form.title_ru.trim()) translations.push({ locale: 'ru', title: form.title_ru.trim() });
+    if (!languages.length) {
+      setFormError('Список языков ещё не загрузился — подождите секунду и сохраните снова.');
+      return;
+    }
+    const lang = languages.find((l) => String(l.id) === String(selectedLang));
+    if (!lang) {
+      setFormError('Выберите язык курса в списке.');
+      return;
+    }
+    const { primaryLocale, secondaryLocale } = localeBundle;
+    const translations = [{ locale: primaryLocale, title: form.title_en.trim() }];
+    if (form.title_ru.trim()) translations.push({ locale: secondaryLocale, title: form.title_ru.trim() });
 
     const payload = {
       language_id: Number(form.language_id || selectedLang),
@@ -53,6 +96,7 @@ export default function CategoryCRUD() {
       sort_order: Number(form.sort_order),
       translations,
     };
+    setFormError('');
     try {
       if (editing) {
         await put(`/admin/categories/${editing}`, payload);
@@ -61,37 +105,47 @@ export default function CategoryCRUD() {
       }
       resetForm();
       fetchCategories();
-    } catch {}
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error?.message
+        || err?.response?.data?.error?.details?.map?.((d) => d.msg || d.message)?.join?.('; ')
+        || err?.message
+        || t('common.error');
+      setFormError(msg);
+    }
   };
 
-  const handleEdit = async (cat) => {
-    setEditing(cat.id);
-    // Fetch both locale translations explicitly so neither field shows the wrong language
-    try {
-      const [enRes, ruRes] = await Promise.all([
-        api.get(`/languages/${cat.language_id}/categories`, { headers: { 'Accept-Language': 'en' } }),
-        api.get(`/languages/${cat.language_id}/categories`, { headers: { 'Accept-Language': 'ru' } }),
-      ]);
-      const enList = enRes.data?.data ?? enRes.data ?? [];
-      const ruList = ruRes.data?.data ?? ruRes.data ?? [];
-      const enCat = enList.find((c) => c.id === cat.id);
-      const ruCat = ruList.find((c) => c.id === cat.id);
-      setForm({
-        language_id: String(cat.language_id),
-        slug: cat.slug || '',
-        sort_order: cat.sort_order || 0,
-        title_en: enCat?.title || '',
-        title_ru: ruCat?.title || '',
-      });
-    } catch {
-      setForm({
-        language_id: String(cat.language_id),
-        slug: cat.slug || '',
-        sort_order: cat.sort_order || 0,
-        title_en: cat.title || '',
-        title_ru: '',
-      });
+  const titleForLocale = (cat, loc) => {
+    const code = String(loc || '').toLowerCase().slice(0, 10);
+    const arr = cat.translations;
+    if (Array.isArray(arr)) {
+      const row = arr.find((x) => String(x.locale || '').toLowerCase().slice(0, 10) === code);
+      if (row?.title != null && String(row.title).trim()) return String(row.title).trim();
     }
+    if (String(cat.locale || '').toLowerCase().slice(0, 10) === code && cat.title) {
+      return String(cat.title).trim();
+    }
+    return '';
+  };
+
+  const handleEdit = (cat) => {
+    setEditing(cat.id);
+    setFormError('');
+    const lang = languages.find((l) => String(l.id) === String(cat.language_id ?? selectedLang));
+    const primaryLocale = String(lang?.code || 'en')
+      .trim()
+      .toLowerCase()
+      .slice(0, 10);
+    const secondaryLocale = primaryLocale === 'ru' ? 'en' : 'ru';
+    const primaryTitle = titleForLocale(cat, primaryLocale) || (cat.title && String(cat.title).trim()) || '';
+    const secondaryTitle = titleForLocale(cat, secondaryLocale);
+    setForm({
+      language_id: String(cat.language_id ?? selectedLang),
+      slug: cat.slug || '',
+      sort_order: cat.sort_order || 0,
+      title_en: primaryTitle,
+      title_ru: secondaryTitle,
+    });
   };
 
   const handleDelete = async (id) => {
@@ -125,6 +179,11 @@ export default function CategoryCRUD() {
         <h2 className="text-lg font-semibold mb-4">
           {editing ? t('admin.edit') : t('admin.create')}
         </h2>
+        {formError ? (
+          <p className="text-sm text-red-600 mb-4 whitespace-pre-wrap" role="alert">
+            {formError}
+          </p>
+        ) : null}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
@@ -148,7 +207,8 @@ export default function CategoryCRUD() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title (EN) <span className="text-red-500">*</span>
+              {t('admin.titleForCourseLanguage', { label: localeBundle.courseLabel })}{' '}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -161,7 +221,7 @@ export default function CategoryCRUD() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title (RU) <span className="text-gray-400 text-xs">(optional)</span>
+              {t('admin.titleForSecondaryLanguage', { label: localeBundle.secondaryLabel })}
             </label>
             <input
               type="text"
@@ -190,7 +250,12 @@ export default function CategoryCRUD() {
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('admin.titleForCourseLanguage', { label: localeBundle.courseLabel })}
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('admin.titleForSecondaryLanguage', { label: localeBundle.secondaryLabel })}
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
@@ -200,7 +265,12 @@ export default function CategoryCRUD() {
               <tr key={cat.id}>
                 <td className="px-4 py-3 text-sm">{cat.id}</td>
                 <td className="px-4 py-3 text-sm font-mono">{cat.slug}</td>
-                <td className="px-4 py-3 text-sm">{cat.title}</td>
+                <td className="px-4 py-3 text-sm">
+                  {titleForLocale(cat, localeBundle.primaryLocale) || cat.title || '—'}
+                </td>
+                <td className="px-4 py-3 text-sm">
+                  {titleForLocale(cat, localeBundle.secondaryLocale) || '—'}
+                </td>
                 <td className="px-4 py-3 text-sm">{cat.sort_order}</td>
                 <td className="px-4 py-3 text-sm space-x-2">
                   <button onClick={() => handleEdit(cat)} className="text-primary-600 hover:text-primary-800 text-xs">

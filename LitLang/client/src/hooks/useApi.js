@@ -9,7 +9,12 @@ export function useApi() {
     setLoading(true);
     setError(null);
     try {
-      const response = await api({ method, url, data, ...config });
+      const m = String(method || '').toLowerCase();
+      const noBody = m === 'get' || m === 'head' || m === 'delete';
+      const axiosConfig = noBody
+        ? { method, url, ...config }
+        : { method, url, data, ...config };
+      const response = await api(axiosConfig);
       return response.data;
     } catch (err) {
       const message = err.response?.data?.error?.message || err.message;

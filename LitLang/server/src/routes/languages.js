@@ -22,9 +22,11 @@ router.get(
   validate,
   async (req, res, next) => {
     try {
+      const includeAll = String(req.query.all || '') === '1';
       const categories = await contentService.getCategoriesByLanguage(
         parseInt(req.params.id, 10),
-        req.locale
+        req.locale,
+        { includeAllTranslations: includeAll }
       );
       res.json({ data: categories });
     } catch (err) {

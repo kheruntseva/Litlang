@@ -6,9 +6,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor: add Accept-Language header
+// Request interceptor: default Accept-Language (do not override per-request locale)
 api.interceptors.request.use((config) => {
-  config.headers['Accept-Language'] = i18n.language || 'en';
+  const headers = config.headers || {};
+  const explicit =
+    headers['Accept-Language'] ??
+    headers['accept-language'];
+  if (explicit === undefined || explicit === null || String(explicit).trim() === '') {
+    headers['Accept-Language'] = i18n.language || 'en';
+    config.headers = headers;
+  }
   // Access token is set dynamically by AuthContext
   const token = window.__litlang_access_token;
   if (token) {

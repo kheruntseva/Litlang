@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useApi } from '../../../hooks/useApi';
+import { acceptLanguageForCourse, parseApiId } from '../../../lib/courseLocaleHeaders';
 import Spinner from '../../../components/Spinner';
 
 export default function ExcerptCRUD() {
@@ -15,6 +16,8 @@ export default function ExcerptCRUD() {
   const [selectedCat, setSelectedCat] = useState('');
   const [selectedRule, setSelectedRule] = useState('');
   const [editing, setEditing] = useState(null);
+  const rulesFetchCatRef = useRef(null);
+  const categoriesFetchLangRef = useRef(null);
   const [form, setForm] = useState({
     rule_id: '', book_id: '', passage: '', highlight: '',
     page_number: '', chapter: '', context_note: '', sort_order: 0,
@@ -24,30 +27,59 @@ export default function ExcerptCRUD() {
     try {
       const res = await get('/languages');
       const langs = res.data || res;
-      setLanguages(langs);
-      if (langs.length > 0 && !selectedLang) setSelectedLang(String(langs[0].id));
+      setLanguages(Array.isArray(langs) ? langs : []);
+      const list = Array.isArray(langs) ? langs : [];
+      if (list.length > 0 && list[0]?.id != null && !parseApiId(selectedLang)) {
+        setSelectedLang(String(list[0].id));
+      }
     } catch {}
   }, [get, selectedLang]);
 
   const fetchCategories = useCallback(async () => {
-    if (!selectedLang) return;
+    const langId = parseApiId(selectedLang);
+    if (!langId) {
+      categoriesFetchLangRef.current = null;
+      setCategories([]);
+      setSelectedCat('');
+      return;
+    }
+    categoriesFetchLangRef.current = langId;
     try {
-      const res = await get(`/languages/${selectedLang}/categories`);
+      const res = await get(
+        `/languages/${langId}/categories`,
+        acceptLanguageForCourse(languages, langId)
+      );
       const cats = res.data || res;
-      setCategories(cats);
-      if (cats.length > 0 && !selectedCat) setSelectedCat(String(cats[0].id));
+      const catList = Array.isArray(cats) ? cats : [];
+      if (categoriesFetchLangRef.current !== langId) return;
+      setCategories(catList);
+      if (catList.length > 0 && catList[0]?.id != null && !parseApiId(selectedCat)) {
+        setSelectedCat(String(catList[0].id));
+      }
     } catch {}
-  }, [get, selectedLang, selectedCat]);
+  }, [get, selectedLang, selectedCat, languages]);
 
   const fetchRules = useCallback(async () => {
-    if (!selectedCat) return;
+    const catId = parseApiId(selectedCat);
+    if (!catId) {
+      rulesFetchCatRef.current = null;
+      setRules([]);
+      setSelectedRule('');
+      return;
+    }
+    rulesFetchCatRef.current = catId;
+    setRules([]);
     try {
-      const res = await get(`/categories/${selectedCat}/rules`);
+      const res = await get(
+        `/categories/${catId}/rules`,
+        acceptLanguageForCourse(languages, selectedLang)
+      );
       const r = res.data || res;
-      setRules(r);
-      if (r.length > 0 && !selectedRule) setSelectedRule(String(r[0].id));
+      const ruleList = Array.isArray(r) ? r : [];
+      if (rulesFetchCatRef.current !== catId) return;
+      setRules(ruleList);
     } catch {}
-  }, [get, selectedCat, selectedRule]);
+  }, [get, selectedCat, selectedLang, languages]);
 
   const fetchBooks = useCallback(async () => {
     try {
@@ -57,10 +89,16 @@ export default function ExcerptCRUD() {
   }, [get]);
 
   const fetchExcerpts = useCallback(async () => {
-    if (!selectedRule) return;
+    const ruleId = parseApiId(selectedRule);
+    if (!ruleId) {
+      setExcerpts([]);
+      return;
+    }
     try {
-      const res = await get(`/rules/${selectedRule}/excerpts`);
-      setExcerpts(res.data || res);
+      const res = await get(`/rules/${ruleId}/excerpts`);
+      const raw = res?.data;
+      const list = Array.isArray(raw) ? raw : Array.isArray(res) ? res : [];
+      setExcerpts(list);
     } catch {}
   }, [get, selectedRule]);
 
@@ -68,6 +106,33 @@ export default function ExcerptCRUD() {
   useEffect(() => { fetchCategories(); }, [fetchCategories]);
   useEffect(() => { fetchRules(); }, [fetchRules]);
   useEffect(() => { fetchExcerpts(); }, [fetchExcerpts]);
+
+  useEffect(() => {
+    if (!languages.length) return;
+    const keys = new Set(languages.map((l) => String(l.id)));
+    const cur = parseApiId(selectedLang);
+    if (!cur || !keys.has(cur)) setSelectedLang(String(languages[0].id));
+  }, [languages, selectedLang]);
+
+  useEffect(() => {
+    if (!categories.length) {
+      setSelectedCat('');
+      return;
+    }
+    const keys = new Set(categories.map((c) => String(c.id)));
+    const cur = parseApiId(selectedCat);
+    if (!cur || !keys.has(cur)) setSelectedCat(String(categories[0].id));
+  }, [categories, selectedCat]);
+
+  useEffect(() => {
+    if (!rules.length) {
+      setSelectedRule('');
+      return;
+    }
+    const keys = new Set(rules.map((r) => String(r.id)));
+    const cur = parseApiId(selectedRule);
+    if (!cur || !keys.has(cur)) setSelectedRule(String(rules[0].id));
+  }, [rules, selectedRule]);
 
   const resetForm = () => {
     setForm({
